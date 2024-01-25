@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo2</title>
+</head>
+<body>
+<script>
+    "use strict";
+
+    // создание класса "Товар"
+    class Product {
+        constructor(id, name, description, price, finalPrice) {
+            this.id = id;
+            this.name = name;
+            this.description = description;
+            this.price = price;
+            this.finalPrice = finalPrice;
+        }
+
+        //получение идинтификатора товара
+        getId() {
+            return this.id;
+        }
+
+        //получение названия товара
+        getName() {
+            return this.name;
+        }
+
+        //получение описания товара
+        getDescription() {
+            return this.description;
+        }
+
+        //получение стоимости товара без скидки
+        getPrice() {
+            return this.price;
+        }
+
+        //получение стоимости товара с учетом скидки
+        getFinalPrice() {
+            return this.finalPrice;
+        }
+    }
+
+    //создание раздела "Каталог"
+    class Catalogue {
+        constructor(items) {
+            this.items = items;
+        }
+
+        //получение товара по идинтификатору
+        getElementById(id) {
+            for (let i = 0; i < this.items.length; i++) {
+                if (this.items[i].getId() === id) {
+                    return this.items[i];
+                }
+            }
+        }
+
+        //получение всех товаров
+        getItems() {
+            return this.items;
+        }
+    }
+
+    //создание класса "Избранное", наследованного от класса "Каталог"
+    class Favorites extends Catalogue {
+
+        //добавление товара
+        addItem(product) {
+            if (!this.getElementById(product.getId())) {
+                this.items.push(product);
+            }
+        }
+
+        //удаление товара
+        removeItemById(id) {
+            for (let i = 0; i < this.items.length; i++) {
+                if (this.items[i].getId() === id) {
+                    this.items.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    //создание класса "Карзина", наследованного от класса "Избранное"
+    class Cart extends Favorites {
+
+        //расчет общей стоимости без учета скидки
+        calcTotalPrice() {
+            let totalPrice = 0;
+
+            for (let i = 0; i < this.items.length; i++) {
+                totalPrice += this.items[i].getPrice();
+            }
+
+            return totalPrice;
+        }
+
+        //расчет общей стоимости с учетом скидки
+        calcTotalFinalPrice() {
+            let totalFinalPrice = 0;
+
+            for (let i = 0; i < this.items.length; i++) {
+                totalFinalPrice += this.items[i].getFinalPrice();
+            }
+
+            return totalFinalPrice;
+        }
+
+        //расчет скидки
+        calcTotalDiscount() {
+            return this.calcTotalPrice() - this.calcTotalFinalPrice();
+        }
+    }
+
+    //создание класса для работы с текстом для prompt
+    class PromptDrawer {
+
+        //получаем текст для отрисовки главной страницы
+        static getHome() {
+            let body = 'Выберите действие:\n';
+            body += '1 - Каталог\n';
+            body += '2 - Избранное\n';
+            body += '3 - Корзина';
+
+            return body;
+        }
+
+        //получаем текст для отрисовки страницы "Каталог"
+        static getCatalog(catalogue) {
+            let body = 'Вы находитесь в Каталоге.\n\n';
+
+            for (let i = 0; i < catalogue.getItems().length; i++) {
+                let item = catalogue.getItems()[i];
+                body += item.getId() + ' ';
+                body += item.getName() + ' ';
+                body += item.getDescription() + ' ';
+                body += item.getPrice() + ' ';
+                body += item.getFinalPrice() + '';
+                body += '\n';
+            }
+
+            body += '\nВыберете товар для добавления в Избранное(1) или Корзину(2).';
+
+            return body;
+        }
+
+        //получаем текст для отрисовки страницы "Избранное"
+        static getFavorites(favorites) {
+            let body = 'Вы находитесь в Избранном.\n\n';
+
+            if (favorites.getItems().length === 0) {
+                body += 'Избранных товаров нет, добавьте товары.';
+
+                body += '\n\nВыберите товар для удаления:';
+
+                return body;
+            }
+
+            for (let i = 0; i < favorites.getItems().length; i++) {
+                let item = favorites.getItems()[i];
+                body += item.getId() + ' ';
+                body += item.getName() + ' ';
+                body += item.getDescription() + ' ';
+                body += item.getPrice() + ' ';
+                body += item.getFinalPrice() + '';
+                body += '\n';
+            }
+
+            body += '\nВыберите товар для удаления:';
+
+            return body;
+        }
+
+        //получаем текст для отрисовки страницы "Корзина"
+        static getCart(cart) {
+            let body = 'Вы находитесь в Корзине.\n\n';
+
+            if (cart.getItems().length === 0) {
+                body += 'Корзина пуста, добавьте товары.';
+
+                body += '\n\nВыберите товар для удаления:';
+
+                return body;
+            }
+
+            for (let i = 0; i < cart.getItems().length; i++) {
+                let item = cart.getItems()[i];
+                body += item.getId() + ' ';
+                body += item.getName() + ' ';
+                body += item.getDescription() + ' ';
+                body += item.getPrice() + ' ';
+                body += item.getFinalPrice() + '';
+                body += '\n';
+            }
+
+            body += '\nЦена без скидки: ' + cart.calcTotalPrice();
+            body += '\nЦена со скидкой: ' + cart.calcTotalFinalPrice();
+            body += '\nВаша скидка составила: ' + cart.calcTotalDiscount();
+            body += '\n\nВыберите товар для удаления:';
+
+            return body;
+        }
+    }
+
+    //создание массива для хранения продуктов
+    let products = [
+        new Product('1', 'Кеды', 'Классные кеды', 3200, 2999),
+        new Product('2', 'Кроссовки', 'Крутые кроссовки', 8500, 7999),
+        new Product('3', 'Джинсы', 'Модные джинсы', 10000, 8599),
+        new Product('4', 'Худи', 'Молодежное худи', 5400, 4899),
+        new Product('5', 'Свитшот', 'Стильный свитшот', 4200, 3399)
+    ];
+    //создание объекта "Каталог"
+    let catalogue = new Catalogue(products);
+
+    //создание объекта "Избранное"
+    let favorites = new Favorites([]);
+
+    //создание объекта "Корзина"
+    let cart = new Cart([]);
+
+
+    //Бесконечный цикл для перемещения по страницам
+    while (true) {
+
+        //Запрашиваем у пользователя номер страницы
+        let page = prompt(PromptDrawer.getHome());
+
+        if (page === null) {
+            continue;
+        }
+
+        if (page === '1') {
+            //Запрашиваем у пользователя номер товара и место взаимодействия("Корзина" или "Избранное")
+            let selectedProduct = prompt(PromptDrawer.getCatalog(catalogue));
+
+            if (selectedProduct === null) {
+                continue;
+            }
+
+            if (selectedProduct[2] !== undefined) {
+                //Попадаем сюда, если введено 3 или более цифр
+                alert('Ошибка. Вводимое число должно состоять из двух цифр, первая - идентификатор товара, вторая - добавление в корзину(2) или избранное(1).');
+                continue;
+            }
+
+            if (selectedProduct[1] === '1') {
+                //Попадаем сюда, если пользователь выбрал работу с "Избранное"
+                let product = catalogue.getElementById(selectedProduct[0]);
+                if (product === undefined) {
+                    alert('Ошибка. Товара с таким идентификатором не существует.');
+                } else {
+                    favorites.addItem(product);
+                }
+            } else if (selectedProduct[1] === '2') {
+                //Попадаем сюда, если пользователь выбрал работу с "Корзина"
+                let product = catalogue.getElementById(selectedProduct[0]);
+                if (product === undefined) {
+                    alert('Ошибка. Товара с таким идентификатором не существует.');
+                } else {
+                    cart.addItem(product);
+                }
+            } else {
+                alert('Ошибка. Вводимое число должно состоять из двух цифр, первая - идентификатор товара, вторая - добавление в корзину(2) или избранное(1).');
+            }
+        } else if (page === '2') {
+            //Запрашиваем у пользователя номер товара для удаления из "Избранное"
+            let selectedProduct = prompt(PromptDrawer.getFavorites(favorites));
+
+            if (selectedProduct === null) {
+                continue;
+            }
+
+            let product = favorites.getElementById(selectedProduct);
+            if (product === undefined) {
+                alert('Ошибка. Товара с таким идентификатором не существует.');
+            } else {
+                favorites.removeItemById(selectedProduct);
+            }
+        } else if (page === '3') {
+
+            //Запрашиваем у пользователя номер товара для удаления из "Корзина"
+            let selectedProduct = prompt(PromptDrawer.getCart(cart));
+
+            if (selectedProduct === null) {
+                continue;
+            }
+
+            let product = cart.getElementById(selectedProduct);
+            if (product === undefined) {
+                alert('Ошибка. Товара с таким идентификатором не существует.');
+            } else {
+                cart.removeItemById(selectedProduct);
+            }
+        } else {
+            alert('Ошибка. Введите одно из чисел 1,2,3.');
+        }
+    }
+</script>
+</body>
+</html>
